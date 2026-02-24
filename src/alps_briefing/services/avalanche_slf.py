@@ -1,32 +1,33 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
 import requests
-import xmltodict
 
-SLF_CAAML_URL = "https://aws.slf.ch/api/bulletin/caaml"
-
+BASE = "https://aws.slf.ch/api/bulletin/caaml"
 HEADERS = {
     "User-Agent": "alps-briefing-agent/1.0 (learning project)",
-    "Accept": "application/xml",
+    "Accept": "application/json",
 }
 
-def fetch_slf_bulletin_parsed() -> dict:
-    r = requests.get(SLF_CAAML_URL, headers=HEADERS, timeout=30)
-    r.raise_for_status()
 
-    content = r.content
-    ct = (r.headers.get("content-type") or "").lower()
-    first = content.lstrip()[:50].lower()
+def fetch_slf_bulletin(lang: str = "en", active_at: datetime | None = None) -> dict:
+    # IMPORTANT: lang is in the PATH (…/caaml/en/json), not as ?lang=en
+    url = f"{BASE}/{lang}/json"
 
-    # common case: HTML response (redirect/WAF/maintenance)
-    if b"<html" in first or b"<!doctype html" in first:
-        preview = content[:400].decode("utf-8", "replace")
-        raise ValueError(
-            f"SLF did not return XML (content-type={ct}, url={r.url}). Preview:\n{preview}"
+    params: dict[str, str] = {}
+    if active_at is not None:
+        params["activeAt"] = (
+            active_at.astimezone(timezone.utc)
+            .replace(microsecond=0)
+            .strftime("%Y-%m-%dT%H:%M:%SZ")
         )
 
-    try:
-        return xmltodict.parse(content)
-    except Exception as e:
-        preview = content[:400].decode("utf-8", "replace")
-        raise ValueError(
-            f"Could not parse SLF response as XML (content-type={ct}, url={r.url}). Preview:\n{preview}"
-        ) from e
+    r = requests.get(url, params=params, headers=HEADERS, timeout=30)
+    r.raise_for_status()
+
+    # guardrail: if it ever returns HTML, fail with a clear message
+    ct = (r.headers.get("content-type") or "").lower()
+    if "html" in ct:
+        raise ValueError(f"SLF returned HTML, not JSON. content-type={ct} url={r.url}")
+
+    return r.json()
