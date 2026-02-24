@@ -1,6 +1,6 @@
 import requests
 
-SLF_BULLETIN_URL = "PASTE_YOUR_WORKING_SLF_JSON_ENDPOINT_HERE"
+SLF_BULLETIN_URL = "https://aws.slf.ch/api/bulletin/caaml"
 
 def fetch_slf_bulletin(lang: str = "en") -> dict:
     headers = {"User-Agent": "alps-briefing-agent/1.0 (learning project)"}
