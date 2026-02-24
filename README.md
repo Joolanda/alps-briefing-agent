@@ -153,6 +153,6 @@ This project includes a robust region‑search function that scans all features 
 ---
 
 ## 🙌 Credits
-Built by **Jolanda** as part of the *AI Project Management Cohort* — a one‑day challenge to design, build, and ship a working AI agent.
+Built by **Joolanda** as part of the *AI Project Management Cohort* — a one‑day challenge to design, build, and ship a working AI agent.
 
 ---
