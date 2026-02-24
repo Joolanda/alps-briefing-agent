@@ -4,8 +4,23 @@ from alps_briefing.services.geocoding import geocode
 from alps_briefing.services.weather import fetch_weather
 from alps_briefing.services.avalanche_slf import fetch_slf_bulletin
 
+from alps_briefing.services.avalanche_gear_qa import answer_avalanche_gear_question  # NEW
+
 st.title("Alps Briefing Agent (MVP)")
 
+# --- NEW: chat-like question ---
+st.markdown("## Ask the agent")
+q = st.chat_input('Ask: "Do I need avalanche gear in Andermatt tomorrow?"')
+if q:
+    try:
+        out = answer_avalanche_gear_question(q)
+        st.write(out["answer"])
+        with st.expander("Debug"):
+            st.json(out)
+    except Exception as e:
+        st.error(str(e))
+
+# --- Existing UI ---
 place = st.text_input("Location", "Zermatt")
 
 if st.button("Generate briefing"):
