@@ -29,12 +29,20 @@ def parse_place_and_day(question: str) -> tuple[str, date]:
 
 
 def pick_bulletin_for_region(slf_payload: dict, region_id: str) -> dict:
-    bulletins = slf_payload.get("bulletins") or []
-    for b in bulletins:
-        regions = b.get("regions") or []
-        if any(r.get("regionID") == region_id for r in regions):
-            return b
+    """
+    SLF v4 GeoJSON structure:
+    FeatureCollection -> features -> properties -> regions[]
+    """
+    for feature in slf_payload.get("features", []):
+        for region in feature["properties"].get("regions", []):
+            if region.get("regionID") == region_id:
+                # Return the entire feature, which contains:
+                # - properties (danger levels, validTime, nextUpdate)
+                # - geometry (polygon)
+                return feature["properties"]
+
     raise ValueError(f"No SLF bulletin found for region_id={region_id} (mapping may be wrong).")
+
 
 
 def extract_max_danger_level(bulletin: dict) -> int | None:
